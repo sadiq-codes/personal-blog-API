@@ -29,6 +29,9 @@ def create_app(config_name):
     from .users import users
     app.register_blueprint(users)
 
+    from .posts import posts
+    app.register_blueprint(posts)
+
     from .api import api
     app.register_blueprint(api, url_prefix="/api/v1")
 

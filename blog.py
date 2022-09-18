@@ -15,14 +15,13 @@ def create_shell_context():
 
 @app.cli.command("createsuperuser")
 def create_user():
-    username = input("Enter username: ")
-    email = input("Enter email address: ")
-    password = input("Enter password 1: ")
-    user = User(username=username, email=email, is_admin=True)
-    user.hashed_password = password
+    user = User(username=os.environ.get("BLOG_USERNAME"),\
+                email=os.environ.get("BLOG_ADMIN"), is_admin=True)
+    user.hash_password = os.environ.get("BLOG_PASSWORD")
     db.session.add(user)
     db.session.commit()
     print("user created successfully")
+
 
 
 @app.cli.command()
