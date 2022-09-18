@@ -105,7 +105,7 @@ def delete_tag(tag_slug):
     return jsonify({"message": "tag deleted successfully"}), 200
 
 
-@api.route('/post/<tag_slug>', methods='GET')
+@api.route('/post/<tag_slug>', methods=['GET'])
 def get_post_by_tag(tag_slug):
     tag = Tag.query.first_or_404(slug=tag_slug)
     posts = tag.posts.order_by(Tag.id)

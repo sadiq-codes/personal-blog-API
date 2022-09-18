@@ -56,12 +56,12 @@ class Post(db.Model):
 
     tags = db.relationship('Tag', secondary=tag, backref=db.backref('posts', lazy='dynamic'),
                            lazy='dynamic')
+    comments = db.relationship('Comment', backref='posts', lazy='dynamic')
+    likes = db.relationship('Like', backref='posts', lazy='dynamic')
 
     def __repr__(self):
         return f'Post {self.title}'
 
-    # def __init__(self):
-    #     super(Post, )
     def format_to_json(self):
         post = {
             'url': url_for('api.post_detail', slug=self.slug),

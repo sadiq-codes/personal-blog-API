@@ -13,6 +13,8 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     password = db.Column(db.String(200))
     post = relationship('Post', backref=db.backref('author'), lazy='dynamic')
+    comments = db.relationship('Comment', backref=db.backref('author'), lazy='dynamic')
+    likes = db.relationship('Like', backref=db.backref("author"), lazy='dynamic')
 
     def __repr__(self):
         return f'User {self.username}'
