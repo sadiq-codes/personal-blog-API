@@ -1,4 +1,4 @@
-from . import api
+from routes import api
 from flask import jsonify
 
 

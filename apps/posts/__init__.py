@@ -1,5 +1,2 @@
-from flask import Blueprint
 
-posts = Blueprint('posts', __name__)
-
-from . import models, forms
+from . import views, models, forms

@@ -1,10 +1,9 @@
-from flask import request, redirect, url_for, abort, make_response, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity, current_user,\
-    set_access_cookies, unset_access_cookies
-from . import api
+from routes import api
+from flask import request, make_response, jsonify
+from flask_jwt_extended import jwt_required, set_access_cookies
 from .. import jwt, db
-from ..users.forms import LoginForm, SignUp
-from ..users.models import User
+from .forms import LoginForm, SignUp
+from .models import User
 
 
 @jwt.user_identity_loader
@@ -37,6 +36,7 @@ def user_login():
 
 
 @api.route('/signup', methods=["GET", "POST"])
+@jwt_required()
 def user_signup():
     form = SignUp(data=request.form)
     if form.is_submitted():
@@ -53,8 +53,20 @@ def user_signup():
     return make_response("Enter your details to register")
 
 
-# @api.route('/logout', ['GET'])
-# @jwt_required()
-# def user_logout():
-#     pass
+@api.route('/logout', methods=['GET'])
+@jwt_required()
+def user_logout():
+    pass
+
+
+@api.route('profile', methods=['GET'])
+def profile(id):
+    user = User.query.get_or_404(id)
+    return jsonify({
+        "name": user.name,
+        "email": user.email,
+
+    })
+
+
 

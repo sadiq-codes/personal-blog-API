@@ -1,5 +1,6 @@
 from apps import db
 from datetime import datetime
+from flask import url_for
 from sqlalchemy import event
 from slugify import slugify
 
@@ -14,6 +15,18 @@ class Tag(db.Model):
 
     def __repr__(self):
         return f'Tag {self.name}'
+
+    def format_to_json(self):
+        tag = {
+            'url': url_for('api.get_post_by_tag', tag_slug=self.slug),
+            'name': self.name,
+            'description': self.description,
+            # 'author_url': url_for('api.get_user', id=self.author_id),
+            'post': [post.name for post in self.posts],
+            "tags_url": []
+        }
+
+        return tag
 
 
 tag = db.Table('tag',
@@ -46,6 +59,22 @@ class Post(db.Model):
 
     def __repr__(self):
         return f'Post {self.title}'
+
+    # def __init__(self):
+    #     super(Post, )
+    def format_to_json(self):
+        post = {
+            'url': url_for('api.post_detail', slug=self.slug),
+            'title': self.title,
+            'body': self.body,
+            'created_on': self.publish_on,
+            'update_on': self.updated_on,
+            'author_url': url_for('api.profile', id=self.author_id),
+            'tags': [tag.name for tag in self.tags],
+            "tags_url": []
+        }
+
+        return post
 
 
 @event.listens_for(Post.title, 'set')

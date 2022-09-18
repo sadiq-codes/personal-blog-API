@@ -1,6 +1,7 @@
 from apps import db
 from flask_jwt_extended import create_access_token, get_jwt_identity
 from werkzeug.security import check_password_hash, generate_password_hash
+from sqlalchemy.orm import relationship
 
 
 class User(db.Model):
@@ -11,7 +12,7 @@ class User(db.Model):
     email = db.Column(db.String(80), unique=True)
     is_admin = db.Column(db.Boolean, default=False)
     password = db.Column(db.String(200))
-    post = db.relationship('Post', backref=db.backref('posts'), lazy='dynamic')
+    post = relationship('Post', backref=db.backref('author'), lazy='dynamic')
 
     def __repr__(self):
         return f'User {self.username}'
