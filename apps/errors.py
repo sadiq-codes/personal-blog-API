@@ -35,7 +35,7 @@ def method_not_allowed(message):
 
 
 @api.errorhandler(500)
-def not_found(message):
+def server_error(message):
     response = jsonify({'success': False,
                         'error': "Internal Server Error",
                         'message': message}), 500

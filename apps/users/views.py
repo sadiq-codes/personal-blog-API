@@ -59,13 +59,12 @@ def user_logout():
     pass
 
 
-@api.route('profile', methods=['GET'])
-def profile(id):
-    user = User.query.get_or_404(id)
+@api.route('/profile/<int:user_id>', methods=['GET'])
+def profile(user_id):
+    user = User.query.get_or_404(user_id)
     return jsonify({
         "name": user.name,
         "email": user.email,
-
     })
 
 

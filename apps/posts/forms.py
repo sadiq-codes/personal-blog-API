@@ -11,5 +11,5 @@ class TagForm(FlaskForm):
 class PostForm(FlaskForm):
     title = StringField('title', validators=[InputRequired()])
     body = TextAreaField('what do you want to share ?', validators=[InputRequired()])
-    tags = FieldList('tags')
+    tags = StringField('tags')
 

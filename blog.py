@@ -4,16 +4,19 @@ from flask_migrate import Migrate
 from apps import create_app, db
 from apps import users
 from apps import posts
+from apps import comments
+
 from routes import api
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'development')
 migrate = Migrate(app, db)
-app.register_blueprint(api, url_prefix="/api/v1")
+app.register_blueprint(api, url_prefix="/api/v1/blog")
+User = users.models.User
 
 
 @app.shell_context_processor
 def create_shell_context():
-    return {"db": db, "User": users.models.User}
+    return {"db": db, "User": User}
 
 
 @app.cli.command("createsuperuser")

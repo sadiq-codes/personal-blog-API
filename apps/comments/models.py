@@ -16,11 +16,9 @@ class Comment(db.Model):
 
     def format_to_json(self):
         comment = {
-            'url': url_for('api.get_comment', id=self.id),
-            'post_url': url_for('api.post_detail', slug=self.post_id),
             'body': self.body,
-            'created_on': self.timestamp,
-            'user_url': url_for('api.profile', id=self.author_id),
+            'created_on': self.created_on,
+            'user_url': url_for('api.profile', id=self.author_i) if self.author_id else "",
         }
         return comment
 
@@ -32,4 +30,13 @@ class Like(db.Model):
     num_likes = db.Column(db.Integer)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+
+    def like(self):
+        post = self.post
+
+    def has_liked(self):
+        if self.post.likes:
+            pass
+
+
 
