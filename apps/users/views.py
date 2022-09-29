@@ -20,6 +20,10 @@ def user_lookup_callback(_jwt_header, jwt_data):
 @api.route('/login', methods=['POST'])
 def user_login():
     form = LoginForm(data=request.form)
+    print("f", request.form)
+    # print("j", request.json)
+    # print("d", request.data)
+    # print("c", request.cookies)
     if form.is_submitted():
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and user.check_password(password=form.password.data):

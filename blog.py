@@ -10,7 +10,7 @@ from routes import api
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'development')
 migrate = Migrate(app, db)
-app.register_blueprint(api, url_prefix="/api/v1/blog")
+app.register_blueprint(api, url_prefix="/api/v1/")
 User = users.models.User
 
 

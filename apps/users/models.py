@@ -10,7 +10,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, index=True)
     name = db.Column(db.String(50), nullable=True, index=True)
     email = db.Column(db.String(80), unique=True)
-    is_admin = db.Column(db.Boolean, default=False)
+    admin = db.Column(db.Boolean, default=False)
     password = db.Column(db.String(200))
     post = relationship('Post', backref=db.backref('author'), lazy='dynamic')
     comments = db.relationship('Comment', backref=db.backref('author'), lazy='dynamic')
@@ -36,3 +36,6 @@ class User(db.Model):
     @property
     def validate_auth_token(token):
         return get_jwt_identity()
+
+    def is_admin(self):
+        return self.admin

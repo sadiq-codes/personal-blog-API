@@ -24,6 +24,7 @@ class Tag(db.Model):
     def format_to_json(self):
         tag = {
             'url': url_for('api.get_post_by_tags', tag_slug=self.slug),
+            "slug": self.slug,
             'name': self.name,
             'description': self.description,
             'post': [post.title for post in self.posts],
@@ -68,6 +69,7 @@ class Post(db.Model):
         post = {
             'url': url_for('api.post_detail', post_slug=self.slug),
             'title': self.title,
+            'slug': self.slug,
             'body': self.body,
             'created_on': self.publish_on,
             'update_on': self.updated_on,

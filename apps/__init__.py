@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from . import errors
 
-# from flask_cors import CORS
+from flask_cors import CORS
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -14,7 +14,7 @@ migrate = Migrate()
 jwt = JWTManager()
 
 
-# cors = CORS()
+cors = CORS()
 
 
 def create_app(config_name):
@@ -27,9 +27,9 @@ def create_app(config_name):
     migrate.init_app(app, db)
     # login_manager.init_app(app)
     jwt.init_app(app)
-    # cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
 
-    # register blueprints
+    # # register blueprints
     # from .users import models, views
     # from .posts import models, views
 

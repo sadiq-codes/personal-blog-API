@@ -1,15 +1,16 @@
 from routes import api
-from flask import request, jsonify, abort, make_response
-from flask_jwt_extended import current_user, jwt_required
+import random
+from flask import request, jsonify, abort, make_response, current_app, url_for
+from flask_jwt_extended import current_user, jwt_required, get_csrf_token
 from .. import db
+from sqlalchemy import update, func
 from .forms import PostForm, TagForm
-from ..comments.models import Comment
 from .models import Post, Tag
 from ..errors import bad_request, forbidden, method_not_allowed, not_found
 from ..helpers import get_or_create
 
 
-@api.route('/create/post', methods=['POST'])
+@api.route('/post/create', methods=['POST'])
 @jwt_required()
 def create_post():
     form = PostForm(request.form)
@@ -53,7 +54,7 @@ def update_post(post_slug):
     return jsonify(post.format_to_json())
 
 
-@api.route('/delete/<post_slug>', methods=['DELETE'])
+@api.route('/post/delete/<post_slug>', methods=['DELETE'])
 @jwt_required()
 def delete_post(post_slug):
     post = Post.query.get_or_404(slug=post_slug)
@@ -68,26 +69,34 @@ def delete_post(post_slug):
 
 @api.route('/posts/list', methods=['GET'])
 def post_list():
-    posts = Post.query.order_by(db.desc('id'))
-    return jsonify({'posts': [post.format_to_json() for post in posts]})
+    page = request.args.get('page', 1, type=int)
+    posts = Post.query.order_by(Post.publish_on.desc()) \
+        .paginate(page, per_page=8,
+                  error_out=False)
+    posts_item = posts.items
+
+    prev_post = None
+    if posts.has_prev:
+        prev_post = url_for('api.post_list', page=page - 1)
+
+    next_post = None
+    if posts.has_next:
+        next_post = url_for('api.post_list', page=page + 1)
+
+    return jsonify({
+        'posts': [post.format_to_json() for post in posts_item],
+        'prev_url': prev_post,
+        'next_url': next_post,
+        'count': posts.total
+    })
 
 
-@api.route('/detail/<post_slug>', methods=['GET', 'POST'])
+@api.route('/post/detail/<post_slug>', methods=['GET'])
 @jwt_required(optional=True)
 def post_detail(post_slug):
     post = Post.query.filter_by(slug=post_slug).first()
     if not post:
         return not_found(message=f"post with slug {post_slug} does not exist")
-    if request.method == "POST":
-        comment = request.form.get('comment', None)
-        if comment:
-            comment = Comment(
-                body=comment,
-                post=post,
-            )
-            db.session.add(comment)
-            db.session.commit()
-            return make_response("comment has been added successfully")
     return jsonify({"post": post.format_to_json()})
 
 
@@ -105,7 +114,7 @@ def create_tag():
         return make_response("form is invalid")
 
 
-@api.route('update/tag/<tag_slug>', methods=['PUT'])
+@api.route('/tag/update/<tag_slug>', methods=['PUT'])
 @jwt_required()
 def update_tag(tag_slug):
     name = request.json.get('name', None)
@@ -121,7 +130,7 @@ def update_tag(tag_slug):
     return jsonify(tag.format_to_json()), 200
 
 
-@api.route('delete/tag/<tag_slug>', methods=['DELETE'])
+@api.route('/tag/delete/<tag_slug>', methods=['DELETE'])
 @jwt_required()
 def delete_tag(tag_slug):
     tag = Tag.query.get_or_404(tag_slug)
@@ -132,16 +141,13 @@ def delete_tag(tag_slug):
     return jsonify({"message": "tag deleted successfully"}),
 
 
-@api.route('/remove/tag/<post_slug>/<tag_slug>', methods=['DELETE'])
+@api.route('/tag/remove/<post_slug>/<tag_slug>', methods=['DELETE'])
 @jwt_required()
 def delete_post_tag(post_slug, tag_slug):
     post = Post.query.filter_by(slug=post_slug).first()
     if not post:
         return not_found(message=f"post with slug {post_slug} does not exist")
-    print(post.tags)
-
     for tag in post.tags:
-        print(tag.slug)
         if tag.slug == tag_slug:
             post.tags.remove(tag)
             db.session.commit()
@@ -153,6 +159,21 @@ def delete_post_tag(post_slug, tag_slug):
 
 @api.route('/tags/<tag_slug>', methods=['GET'])
 def get_post_by_tags(tag_slug):
-    tag = Tag.query.filter_by(slug=tag_slug).first()
-    posts = tag.posts
+    tag1 = Tag.query.filter_by(slug=tag_slug).first()
+    posts = tag1.posts
+    return jsonify({'posts': [post.format_to_json() for post in posts]})
+
+
+@api.route('/posts/featured', methods=['GET'])
+def featured():
+    posts = Post.query.order_by(Post.updated_on.desc()).all()
+    posts = posts[7:8]
+    post = random.choice(posts)
+    return jsonify(post.format_to_json())
+
+
+@api.route('posts/updated', methods=['GET'])
+def updated_posts():
+    posts = Post.query.order_by(Post.updated_on.desc()).all()
+    posts = posts[:5]
     return jsonify({'posts': [post.format_to_json() for post in posts]})
