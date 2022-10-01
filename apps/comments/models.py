@@ -1,4 +1,6 @@
 from datetime import datetime
+from sqlalchemy import UniqueConstraint
+
 from flask import url_for
 
 from .. import db
@@ -12,7 +14,7 @@ class Comment(db.Model):
     created_on = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-    reply_comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'),  nullable=True)
+    reply_comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=True)
     replies = db.relationship('Comment', backref=db.backref("reply", remote_side=[id]))
     disabled = db.Column(db.Boolean)
 
@@ -32,7 +34,6 @@ class Like(db.Model):
     __tablename__ = 'likes'
 
     id = db.Column(db.Integer, primary_key=True)
-    num_likes = db.Column(db.Integer)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
 
@@ -42,6 +43,3 @@ class Like(db.Model):
     def has_liked(self):
         if self.post.likes:
             pass
-
-
-

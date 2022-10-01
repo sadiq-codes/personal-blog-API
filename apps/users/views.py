@@ -31,8 +31,8 @@ def user_login():
             access_token = user.generate_auth_token(user)
             set_access_cookies(response, access_token)
             return jsonify({"email: ": user.email,
-                            "is Admin": user.is_admin,
-                            "access_token": access_token,
+                            "is Admin: ": user.admin,
+                            "access_token: ": access_token,
                             }), 200
         return jsonify("Wrong username or password"), 401
     print(form.errors)

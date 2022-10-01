@@ -78,6 +78,7 @@ class Post(db.Model):
             'tags': [t.format_to_json() for t in self.tags],
             'comments': [c.format_to_json() for c in self.comments],
             'comments_count': self.comments.count(),
+            'likes_count': self.likes.count(),
         }
 
         return post
