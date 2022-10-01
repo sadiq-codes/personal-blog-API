@@ -116,7 +116,7 @@ def get_comments_likes(post_slug):
 
 @api.route('/post/like/<post_slug>', methods=['PUT'])
 def like_post(post_slug):
-    author_id = request.json.get("userId", 1)
+    author_id = 1
     # post = Post.query.filter_by(slug=post_slug).with_entities(Post.id, Post.likes, Post.comments).all()
     post = Post.query.filter_by(slug=post_slug).first()
 
@@ -133,7 +133,7 @@ def like_post(post_slug):
 
 @api.route('/post/unlike/<post_slug>', methods=['DELETE'])
 def unlike_post(post_slug):
-    author_id = request.json.get("userId", 1)
+    author_id = 1
     post = Post.query.filter_by(slug=post_slug).first()
     like = Like.query.filter_by(author_id=author_id, post_id=post.id).first()
     if like is not None:
