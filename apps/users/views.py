@@ -1,9 +1,10 @@
 from routes import api
 from flask import request, make_response, jsonify
-from flask_jwt_extended import jwt_required, set_access_cookies
+from flask_jwt_extended import jwt_required, set_access_cookies,  unset_jwt_cookies
 from .. import jwt, db
 from .forms import LoginForm, SignUp
 from .models import User
+from ..errors import bad_request
 
 
 @jwt.user_identity_loader
@@ -19,28 +20,23 @@ def user_lookup_callback(_jwt_header, jwt_data):
 
 @api.route('/login', methods=['POST'])
 def user_login():
-    form = LoginForm(data=request.form)
-    print("f", request.form)
-    # print("j", request.json)
-    # print("d", request.data)
-    # print("c", request.cookies)
+    form = LoginForm(data=request.json)
     if form.is_submitted():
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and user.check_password(password=form.password.data):
-            response = jsonify({"msg": "login successful"})
+            response = jsonify({"message": "login successful"})
             access_token = user.generate_auth_token(user)
             set_access_cookies(response, access_token)
-            return jsonify({"email: ": user.email,
-                            "is Admin: ": user.admin,
-                            "access_token: ": access_token,
+            return jsonify({"email": user.email,
+                            "is_admin": user.is_admin(),
+                            "access_token": access_token,
                             }), 200
         return jsonify("Wrong username or password"), 401
-    print(form.errors)
-    return jsonify({"message": "Enter your details to get access token"}), 200
+    if form.errors:
+        return bad_request(message=form.errors)
 
 
 @api.route('/signup', methods=["GET", "POST"])
-@jwt_required()
 def user_signup():
     form = SignUp(data=request.form)
     if form.is_submitted():
@@ -60,7 +56,9 @@ def user_signup():
 @api.route('/logout', methods=['GET'])
 @jwt_required()
 def user_logout():
-    pass
+    response = jsonify({"message": "logout successful"})
+    unset_jwt_cookies(response)
+    return response
 
 
 @api.route('/profile/<int:user_id>', methods=['GET'])

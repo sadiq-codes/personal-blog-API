@@ -133,7 +133,7 @@ def update_tag(tag_slug):
 @api.route('/tag/delete/<tag_slug>', methods=['DELETE'])
 @jwt_required()
 def delete_tag(tag_slug):
-    tag = Tag.query.get_or_404(tag_slug)
+    tag = Tag.query.filter_by(slug=tag_slug).first()
     if not tag:
         return not_found(message=f"post with slug {tag_slug} does not exist")
     db.session.delete(tag)
@@ -152,8 +152,6 @@ def delete_post_tag(post_slug, tag_slug):
             post.tags.remove(tag)
             db.session.commit()
     tag_list = [tag.slug for tag in post.tags]
-    # db.session.delete(tag)
-    # db.session.commit()
     return jsonify({"tags": tag_list}), 200
 
 
