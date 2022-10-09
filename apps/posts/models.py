@@ -1,6 +1,7 @@
 from apps import db
+# from blog import app
 from datetime import datetime
-from flask import url_for
+from flask import url_for, send_from_directory, current_app
 from sqlalchemy import event
 from slugify import slugify
 
@@ -21,14 +22,15 @@ class Tag(db.Model):
     #     return Post.query.join(Tag, Tag.tags_id == Post.tags_id) \
     #         .filter(Tag.follower_id == self.id)
 
-    def format_to_json(self):
+    def format_to_json(self, add_post=True):
         tag = {
             'url': url_for('api.get_post_by_tags', tag_slug=self.slug),
             "slug": self.slug,
             'name': self.name,
             'description': self.description,
-            'post': [post.title for post in self.posts],
         }
+        if add_post:
+            tag['post'] = [post.title for post in self.posts]
         return tag
 
 
@@ -44,6 +46,10 @@ def tag_slugify(target, value, oldvalue, initiator):
     target.slug = slugify(value)
 
 
+def get_file(filename):
+    return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], filename)
+
+
 class Post(db.Model):
     __tablename__ = 'posts'
 
@@ -53,6 +59,7 @@ class Post(db.Model):
     slug = db.Column(db.String(), index=True, unique=True)
     title = db.Column(db.String, index=True)
     body = db.Column(db.Text)
+    image = db.Column(db.String())
 
     publish_on = db.Column(db.DateTime, index=True, default=datetime.utcnow, nullable=False)
     updated_on = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -71,11 +78,12 @@ class Post(db.Model):
             'title': self.title,
             'slug': self.slug,
             'body': self.body,
+            'image': get_file(self.image) if self.image is not None else "",
             'created_on': self.publish_on,
             'update_on': self.updated_on,
             'author_url': url_for('api.profile', user_id=self.author_id),
             'author': self.author.username,
-            'tags': [t.format_to_json() for t in self.tags],
+            'tags': [t.format_to_json(add_post=False) for t in self.tags],
             'comments': [c.format_to_json() for c in self.comments],
             'comments_count': self.comments.count(),
             'likes_count': self.likes.count(),

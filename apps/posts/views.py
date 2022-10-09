@@ -1,8 +1,8 @@
 from routes import api
 import random
-from flask import request, jsonify, abort, make_response, current_app, url_for
+from flask import request, jsonify, make_response, url_for, current_app
 from flask_jwt_extended import current_user, jwt_required, get_csrf_token
-from .. import db
+from apps import db, photos
 from sqlalchemy import update, func
 from .forms import PostForm, TagForm
 from .models import Post, Tag
@@ -13,12 +13,12 @@ from ..helpers import get_or_create
 @api.route('/post/create', methods=['POST'])
 @jwt_required()
 def create_post():
-    form = PostForm(request.form)
-    if form.is_submitted():
+    form = PostForm(request.data)
+    if form.is_submitted() and 'photo' in request.files:
         post = Post(title=form.title.data, body=form.body.data, author=current_user)
+        post.image = photos.save(request.files['photo'])
         tags_data = form.tags.data
         tags_data = tags_data.split(',')
-        print(tags_data)
         if tags_data:
             for tag in tags_data:
                 new_tag = get_or_create(db, Tag, name=tag)
@@ -71,7 +71,7 @@ def delete_post(post_slug):
 def post_list():
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.publish_on.desc()) \
-        .paginate(page, per_page=8,
+        .paginate(page, per_page=16,
                   error_out=False)
     posts_item = posts.items
 
@@ -157,9 +157,27 @@ def delete_post_tag(post_slug, tag_slug):
 
 @api.route('/tags/<tag_slug>', methods=['GET'])
 def get_post_by_tags(tag_slug):
-    tag1 = Tag.query.filter_by(slug=tag_slug).first()
-    posts = tag1.posts
-    return jsonify({'posts': [post.format_to_json() for post in posts]})
+    page = request.args.get('page', 1, type=int)
+    tag = Tag.query.filter_by(slug=tag_slug).first()
+    posts = tag.posts.order_by(Post.publish_on.desc()) \
+        .paginate(page, per_page=16,
+                  error_out=False)
+    posts_item = posts.items
+
+    prev_post = None
+    if posts.has_prev:
+        prev_post = url_for('api.post_list', page=page - 1)
+
+    next_post = None
+    if posts.has_next:
+        next_post = url_for('api.post_list', page=page + 1)
+
+    return jsonify({
+        'posts': [post.format_to_json() for post in posts_item],
+        'prev_url': prev_post,
+        'next_url': next_post,
+        'count': posts.total
+    })
 
 
 @api.route('/posts/featured', methods=['GET'])
@@ -175,3 +193,4 @@ def updated_posts():
     posts = Post.query.order_by(Post.updated_on.desc()).all()
     posts = posts[:5]
     return jsonify({'posts': [post.format_to_json() for post in posts]})
+

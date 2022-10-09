@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 # from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
+from flask_uploads import IMAGES, UploadSet, configure_uploads
 from . import errors
 
 from flask_cors import CORS
@@ -15,6 +16,7 @@ jwt = JWTManager()
 
 
 cors = CORS()
+photos = UploadSet("photos", IMAGES)
 
 
 def create_app(config_name):
@@ -28,6 +30,8 @@ def create_app(config_name):
     # login_manager.init_app(app)
     jwt.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+    configure_uploads(app, photos)
+
 
     # # register blueprints
     # from .users import models, views
