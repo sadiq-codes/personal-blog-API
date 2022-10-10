@@ -1,9 +1,40 @@
+from sqlalchemy.orm import relationship
+
 from apps import db
 # from blog import app
 from datetime import datetime
-from flask import url_for, send_from_directory, current_app
+from flask import url_for
 from sqlalchemy import event
 from slugify import slugify
+
+
+class Category(db.Model):
+    __tablename__ = "categories"
+
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    name = db.Column(db.String(50), nullable=False)
+    slug = db.Column(db.String(), index=True, unique=True)
+    description = db.Column(db.String())
+    post = relationship('Post', backref=db.backref('category'), lazy='dynamic')
+
+    def __repr__(self):
+        return f'Category {self.name}'
+
+    def format_to_json(self, add_post=True):
+        category = {
+            'url': url_for('api.get_post_by_tags', tag_slug=self.slug),
+            "slug": self.slug,
+            'name': self.name,
+            'description': self.description,
+        }
+        if add_post:
+            category['post'] = [post.title for post in self.posts]
+        return category
+
+
+@event.listens_for(Category.name, 'set')
+def category_slugify(target, value, oldvalue, initiator):
+    target.slug = slugify(value)
 
 
 class Tag(db.Model):
@@ -46,15 +77,12 @@ def tag_slugify(target, value, oldvalue, initiator):
     target.slug = slugify(value)
 
 
-def get_file(filename):
-    return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], filename)
-
-
 class Post(db.Model):
     __tablename__ = 'posts'
 
     id = db.Column(db.Integer, primary_key=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
 
     slug = db.Column(db.String(), index=True, unique=True)
     title = db.Column(db.String, index=True)
@@ -78,7 +106,7 @@ class Post(db.Model):
             'title': self.title,
             'slug': self.slug,
             'body': self.body,
-            'image': get_file(self.image) if self.image is not None else "",
+            'image': url_for('api.get_file', filename=self.image) if self.image is not None else "",
             'created_on': self.publish_on,
             'update_on': self.updated_on,
             'author_url': url_for('api.profile', user_id=self.author_id),
