@@ -17,7 +17,7 @@ from werkzeug.utils import secure_filename
 def create_category():
     form = CategoryForm(request.form)
     if form.is_submitted():
-        category = Category(name=form.name.data,
+        category = Category(name=form.name.data.lower(),
                             description=form.description.name)
         db.session.add(category)
         db.session.commit()
@@ -86,23 +86,18 @@ def get_post_by_category(category_slug):
     })
 
 
-# @api.route('/uploads/<filename>', methods=['GET'])
-# def get_file(filename):
-#     # print(send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], filename))
-#     return jsonify({"location": (current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))})
-#
+@api.route('/uploads/<filename>', methods=['GET'])
+def get_file(filename):
+    return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))
+
 
 @api.route('/post/create', methods=['POST'])
 @jwt_required()
 def create_post():
     form = PostForm(request.form)
-    print(request.form.items())
-    print(request.data)
-    print(request.files)
-    print(request.cookies)
-    print(request)
     if form.is_submitted() and 'photo' in request.files:
-        post = Post(title=form.title.data, body=form.body.data, author=current_user)
+        category = get_or_create(db, Category, name=request.form["category"].lower())
+        post = Post(title=form.title.data, body=form.body.data, author=current_user, category=category)
         image = photos.save(request.files['photo'])
         post.image = image
         tags_data = form.tags.data

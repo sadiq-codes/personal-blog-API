@@ -78,8 +78,8 @@ def tag_slugify(target, value, oldvalue, initiator):
     target.slug = slugify(value)
 
 
-def get_file(filename):
-    return [current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename)]
+# def get_file(filename):
+#     return [current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename)]
 
 class Post(db.Model):
     __tablename__ = 'posts'
@@ -110,9 +110,9 @@ class Post(db.Model):
             'title': self.title,
             'slug': self.slug,
             'body': self.body,
-            'category': self.category.format_to_json(add_post=False),
-            # 'image': url_for('api.get_file', filename=self.image) if self.image is not None else "",
-            'image':  get_file(self.image) if self.image is not None else "",
+            'category': self.category.format_to_json(add_post=False) if self.category is not None else "",
+            'image': url_for('api.get_file', filename=self.image) if self.image is not None else "",
+            # 'image':  get_file(self.image) if self.image is not None else "",
             'created_on': self.publish_on,
             'update_on': self.updated_on,
             'author_url': url_for('api.profile', user_id=self.author_id),
