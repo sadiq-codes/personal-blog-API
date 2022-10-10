@@ -3,9 +3,10 @@ from sqlalchemy.orm import relationship
 from apps import db
 # from blog import app
 from datetime import datetime
-from flask import url_for
+from flask import url_for, current_app
 from sqlalchemy import event
 from slugify import slugify
+from werkzeug.utils import secure_filename
 
 
 class Category(db.Model):
@@ -22,13 +23,13 @@ class Category(db.Model):
 
     def format_to_json(self, add_post=True):
         category = {
-            'url': url_for('api.get_post_by_tags', tag_slug=self.slug),
+            'url': url_for('api.get_post_by_category', category_slug=self.slug),
             "slug": self.slug,
             'name': self.name,
             'description': self.description,
         }
         if add_post:
-            category['post'] = [post.title for post in self.posts]
+            category['post'] = [p.title for p in self.post]
         return category
 
 
@@ -77,6 +78,9 @@ def tag_slugify(target, value, oldvalue, initiator):
     target.slug = slugify(value)
 
 
+def get_file(filename):
+    return [current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename)]
+
 class Post(db.Model):
     __tablename__ = 'posts'
 
@@ -106,7 +110,9 @@ class Post(db.Model):
             'title': self.title,
             'slug': self.slug,
             'body': self.body,
-            'image': url_for('api.get_file', filename=self.image) if self.image is not None else "",
+            'category': self.category.format_to_json(add_post=False),
+            # 'image': url_for('api.get_file', filename=self.image) if self.image is not None else "",
+            'image':  get_file(self.image) if self.image is not None else "",
             'created_on': self.publish_on,
             'update_on': self.updated_on,
             'author_url': url_for('api.profile', user_id=self.author_id),

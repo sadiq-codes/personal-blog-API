@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from faker import Faker
 from apps import db
 from apps.users.models import User
-from apps.posts.models import Post, Tag
+from apps.posts.models import Post, Tag, Category
 from apps.comments.models import Comment
 
 
@@ -64,6 +64,7 @@ def comments(count=100):
         db.session.add(c)
     db.session.commit()
 
+
 # def reply(count=100):
 #     fake = Faker()
 #     post_count = Post.query.count()
@@ -76,3 +77,13 @@ def comments(count=100):
 #                     author=user)
 #         db.session.add(c)
 #     db.session.commit()
+
+def add_categories():
+    c = Category(name="Tech", description="tech related posts")
+    db.session.add(c)
+    post = Post.query.all()
+    category = Category.query.filter_by(name="Tech").first()
+    for p in post:
+        p.category = category
+
+    db.session.commit()

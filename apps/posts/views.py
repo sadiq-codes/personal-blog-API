@@ -1,22 +1,110 @@
 from routes import api
 import random
-from flask import request, jsonify, make_response, url_for, current_app
+from flask import request, jsonify, make_response, url_for, current_app, \
+    send_from_directory
 from flask_jwt_extended import current_user, jwt_required, get_csrf_token
 from apps import db, photos
 from sqlalchemy import update, func
-from .forms import PostForm, TagForm
-from .models import Post, Tag
+from .forms import PostForm, TagForm, CategoryForm
+from .models import Post, Tag, Category
 from ..errors import bad_request, forbidden, method_not_allowed, not_found
 from ..helpers import get_or_create
+from werkzeug.utils import secure_filename
 
+
+@api.route('/create/category', methods=['POST'])
+@jwt_required()
+def create_category():
+    form = CategoryForm(request.form)
+    if form.is_submitted():
+        category = Category(name=form.name.data,
+                            description=form.description.name)
+        db.session.add(category)
+        db.session.commit()
+        return make_response(f"category {category.name} successfully added"), 200
+    else:
+        return make_response("form is invalid")
+
+
+@api.route('/category/update/<category_slug>', methods=['PUT'])
+@jwt_required()
+def update_category(category_slug):
+    category_name = request.json.get('category_name', None)
+    category_description = request.json.get('category_description', None)
+
+    category = Category.query.get_or_404(category_slug)
+    if not category:
+        return not_found(message=f"category with slug {category_slug} does not exist")
+    category.name = category_name
+    category.description = category_description
+    db.session.add(category)
+    db.session.commit()
+    return jsonify(category.format_to_json()), 200
+
+
+@api.route('/category/delete/<category_slug>', methods=['DELETE'])
+@jwt_required()
+def delete_category(category_slug):
+    category = Tag.query.filter_by(slug=category_slug).first()
+    if not category:
+        return not_found(message=f"post with slug {category_slug} does not exist")
+    db.session.delete(category)
+    db.session.commit()
+    return jsonify({"message": "tag deleted successfully"}),
+
+
+@api.route('/category/list', methods=['GET'])
+def get_category():
+    categories = Category.query.order_by(Category.name)
+    return jsonify({"categories":
+                        [category.format_to_json(add_post=False) for category in categories]})
+
+
+@api.route('/category/<category_slug>', methods=['GET'])
+def get_post_by_category(category_slug):
+    page = request.args.get('page', 1, type=int)
+    category = Category.query.filter_by(slug=category_slug).first()
+    print(category.post)
+    posts = category.post.order_by(Post.publish_on.desc()) \
+        .paginate(page, per_page=16,
+                  error_out=False)
+    posts_item = posts.items
+
+    prev_post = None
+    if posts.has_prev:
+        prev_post = url_for('api.post_list', page=page - 1)
+
+    next_post = None
+    if posts.has_next:
+        next_post = url_for('api.post_list', page=page + 1)
+
+    return jsonify({
+        'posts': [post.format_to_json() for post in posts_item],
+        'prev_url': prev_post,
+        'next_url': next_post,
+        'count': posts.total
+    })
+
+
+# @api.route('/uploads/<filename>', methods=['GET'])
+# def get_file(filename):
+#     # print(send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], filename))
+#     return jsonify({"location": (current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))})
+#
 
 @api.route('/post/create', methods=['POST'])
 @jwt_required()
 def create_post():
-    form = PostForm(request.data)
+    form = PostForm(request.form)
+    print(request.form.items())
+    print(request.data)
+    print(request.files)
+    print(request.cookies)
+    print(request)
     if form.is_submitted() and 'photo' in request.files:
         post = Post(title=form.title.data, body=form.body.data, author=current_user)
-        post.image = photos.save(request.files['photo'])
+        image = photos.save(request.files['photo'])
+        post.image = image
         tags_data = form.tags.data
         tags_data = tags_data.split(',')
         if tags_data:
@@ -193,4 +281,3 @@ def updated_posts():
     posts = Post.query.order_by(Post.updated_on.desc()).all()
     posts = posts[:5]
     return jsonify({'posts': [post.format_to_json() for post in posts]})
-

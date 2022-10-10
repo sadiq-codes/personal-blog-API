@@ -12,7 +12,7 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = os.environ.get('JWT_ACCESS_TOKEN_EXPIRES') or 60 * 60 * 24
     JWT_COOKIE_SECURE = True
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
-    UPLOADED_PHOTOS_DEST = "static/img"
+    UPLOADED_PHOTOS_DEST = os.path.join(str(BASE_DIR / 'static/img'))
 
     @staticmethod
     def init_app(app):
