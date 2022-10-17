@@ -56,30 +56,25 @@ def delete_category(category_slug):
 @api.route('/category/list', methods=['GET'])
 def get_category():
     categories = Category.query.order_by(Category.name)
-    return jsonify({"categories":
-                        [category.format_to_json(add_post=False) for category in categories]})
+    return jsonify({"categories": [category.format_to_json(add_post=False) for category in categories]})
 
 
 @api.route('/category/<category_slug>', methods=['GET'])
 def get_post_by_category(category_slug):
     page = request.args.get('page', 1, type=int)
     category = Category.query.filter_by(slug=category_slug).first()
-    print(category.post)
     posts = category.post.order_by(Post.publish_on.desc()) \
         .paginate(page, per_page=16,
                   error_out=False)
-    posts_item = posts.items
 
-    prev_post = None
-    if posts.has_prev:
-        prev_post = url_for('api.post_list', page=page - 1)
+    prev_post = url_for('api.post_list', page=posts.prev_num) \
+        if posts.has_prev else None
 
-    next_post = None
-    if posts.has_next:
-        next_post = url_for('api.post_list', page=page + 1)
+    next_post = url_for('api.post_list', page=posts.next_num) \
+        if posts.has_next else None
 
     return jsonify({
-        'posts': [post.format_to_json() for post in posts_item],
+        'posts': [post.format_to_json() for post in posts.items],
         'prev_url': prev_post,
         'next_url': next_post,
         'count': posts.total
@@ -92,7 +87,7 @@ def get_file(filename):
 
 
 @api.route('/post/create', methods=['POST'])
-@jwt_required()
+@jwt_required(optional=True)
 def create_post():
     form = PostForm(request.form)
     if form.is_submitted() and 'photo' in request.files:
@@ -100,8 +95,7 @@ def create_post():
         post = Post(title=form.title.data, body=form.body.data, author=current_user, category=category)
         image = photos.save(request.files['photo'])
         post.image = image
-        tags_data = form.tags.data
-        tags_data = tags_data.split(',')
+        tags_data = form.tags.data.split(',')
         if tags_data:
             for tag in tags_data:
                 new_tag = get_or_create(db, Tag, name=tag)
@@ -109,44 +103,53 @@ def create_post():
         db.session.add(post)
         db.session.commit()
         return jsonify(post.format_to_json()), 200
+    return jsonify({"msg": "owokijwo"})
 
 
 @api.route('/post/update/<post_slug>', methods=['PUT'])
-@jwt_required()
+@jwt_required(optional=True)
 def update_post(post_slug):
-    title = request.json.get("title", None)
-    body = request.json.get("body", None)
-    tags = request.json.get("tags", None)
-
-    post = Post.query.get_or_404(post_slug).first()
+    form = PostForm(request.form)
+    print(request.files)
+    post = Post.query.filter_by(slug=post_slug).first()
     if not post:
         return not_found(message=f"post with slug {post_slug} does not exist")
 
     if current_user != post.author:
         forbidden(message="Permission denied")
     else:
-        post.title = title
-        post.body = body
-        tags_data = tags.split(',')
+        category = get_or_create(db, Category, name=request.form["category"].lower())
+        if request.files:
+            image = photos.save(request.files['photo'])
+            post.image = image
+        post.category = category
+        post.title = form.title.data
+        post.body = form.body.data
+        tags_data = form.tags.data.split(',')
+        tags_array = []
         if tags_data:
             for tag in tags_data:
-                new_tag = get_or_create(db, Tag, name=tag)
-                new_tag.posts.append(post)
+                new_tag = get_or_create(db, Tag, name=tag.lower())
+                # if new_tag not in post.tags:
+                #     new_tag.posts.append(post)
+                tags_array.append(new_tag)
+                post.tags = tags_array
         db.session.add(post)
         db.session.commit()
     return jsonify(post.format_to_json())
 
 
 @api.route('/post/delete/<post_slug>', methods=['DELETE'])
-@jwt_required()
+@jwt_required(optional=True)
 def delete_post(post_slug):
-    post = Post.query.get_or_404(slug=post_slug)
+    post = Post.query.filter_by(slug=post_slug).first()
     if not post:
         return not_found(message=f"post with slug {post_slug} does not exist")
     if current_user != post.author:
         forbidden(message="Permission denied")
     db.session.delete(post)
     db.session.commit()
+    # return jsonify(), 200
     return jsonify({"message": "post deleted successfully"}), 200
 
 
@@ -156,18 +159,15 @@ def post_list():
     posts = Post.query.order_by(Post.publish_on.desc()) \
         .paginate(page, per_page=16,
                   error_out=False)
-    posts_item = posts.items
 
-    prev_post = None
-    if posts.has_prev:
-        prev_post = url_for('api.post_list', page=page - 1)
+    prev_post = url_for('api.post_list', page=posts.prev_num) \
+        if posts.has_prev else None
 
-    next_post = None
-    if posts.has_next:
-        next_post = url_for('api.post_list', page=page + 1)
+    next_post = url_for('api.post_list', page=posts.next_num) \
+        if posts.has_next else None
 
     return jsonify({
-        'posts': [post.format_to_json() for post in posts_item],
+        'posts': [post.format_to_json() for post in posts.items],
         'prev_url': prev_post,
         'next_url': next_post,
         'count': posts.total
@@ -245,18 +245,15 @@ def get_post_by_tags(tag_slug):
     posts = tag.posts.order_by(Post.publish_on.desc()) \
         .paginate(page, per_page=16,
                   error_out=False)
-    posts_item = posts.items
 
-    prev_post = None
-    if posts.has_prev:
-        prev_post = url_for('api.post_list', page=page - 1)
+    prev_post = url_for('api.post_list', page=posts.prev_num) \
+        if posts.has_prev else None
 
-    next_post = None
-    if posts.has_next:
-        next_post = url_for('api.post_list', page=page + 1)
+    next_post = url_for('api.post_list', page=posts.next_num) \
+        if posts.has_next else None
 
     return jsonify({
-        'posts': [post.format_to_json() for post in posts_item],
+        'posts': [post.format_to_json() for post in posts.items],
         'prev_url': prev_post,
         'next_url': next_post,
         'count': posts.total
