@@ -99,43 +99,38 @@ def delete_comment(comment_id):
 
 @api.route('get/comments/likes/<post_slug>', methods=['GET'])
 def get_comments_likes(post_slug):
-    author_id = 1
     post = Post.query.filter_by(slug=post_slug).first()
     if post is None:
         return not_found(message=f"post with slug {post_slug} is not fund")
 
-    has_like = False
-
-    if Like.query.filter_by(author_id=author_id, post_id=post.id).count() > 0:
-        has_like = True
+    # has_like = False
+    # if Like.query.filter_by(post_id=post.id).count() > 0:
+        # has_like = True
 
     return jsonify({"post": {"likes": post.likes.count(),
-                             "comments": post.comments.count(),
-                             "has_like": has_like}})
+                             "comments": post.comments.count()}})
 
 
 @api.route('/post/like/<post_slug>', methods=['PUT'])
 def like_post(post_slug):
-    author_id = 1
     # post = Post.query.filter_by(slug=post_slug).with_entities(Post.id, Post.likes, Post.comments).all()
     post = Post.query.filter_by(slug=post_slug).first()
 
-    if Like.query.filter_by(author_id=author_id, post_id=post.id).count() == 0:
-        like = Like(author_id=author_id, post_id=post.id)
-        db.session.add(like)
-        db.session.commit()
-        return jsonify({"message": "You like this post",
-                        "post": {"likes": post.likes.count(),
-                                 "comments": post.comments.count()}})
-    else:
-        return bad_request(message="You already like this post")
+    # if Like.query.filter_by(author_id=author_id, post_id=post.id).count() == 0:
+    like = Like(post_id=post.id)
+    db.session.add(like)
+    db.session.commit()
+    return jsonify({"message": "You like this post",
+                    "post": {"likes": post.likes.count(),
+                             "comments": post.comments.count()}})
+    # else:
+    #     return bad_request(message="You already like this post")
 
 
 @api.route('/post/unlike/<post_slug>', methods=['DELETE'])
 def unlike_post(post_slug):
-    author_id = 1
     post = Post.query.filter_by(slug=post_slug).first()
-    like = Like.query.filter_by(author_id=author_id, post_id=post.id).first()
+    like = Like.query.filter_by(post_id=post.id).first()
     if like is not None:
         db.session.delete(like)
         db.session.commit()
