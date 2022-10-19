@@ -6,7 +6,9 @@ from datetime import datetime
 from flask import url_for, current_app
 from sqlalchemy import event
 from slugify import slugify
-from werkzeug.utils import secure_filename
+from markdown import markdown
+import bleach
+
 
 
 class Category(db.Model):
@@ -91,6 +93,7 @@ class Post(db.Model):
     slug = db.Column(db.String(), index=True, unique=True)
     title = db.Column(db.String, index=True)
     body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
     image = db.Column(db.String())
 
     publish_on = db.Column(db.DateTime, index=True, default=datetime.utcnow, nullable=False)
@@ -110,6 +113,7 @@ class Post(db.Model):
             'title': self.title,
             'slug': self.slug,
             'body': self.body,
+            'body_html': self.body_html,
             'category': self.category.format_to_json(add_post=False) if self.category is not None else "",
             'image': url_for('api.get_file', filename=self.image) if self.image is not None else "",
             # 'image':  get_file(self.image) if self.image is not None else "",
@@ -129,3 +133,14 @@ class Post(db.Model):
 @event.listens_for(Post.title, 'set')
 def post_slugify(target, value, oldvalue, initiator):
     target.slug = slugify(value)
+
+
+@event.listens_for(Post.body, 'set')
+def on_changed_body(target, value, oldvalue, initiator):
+    allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+                    'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+                    'h1', 'h2', 'h3', 'p']
+    target.body_html = bleach.linkify(bleach.clean(
+        markdown(value, output_format='html'),
+        tags=allowed_tags, strip=True))
+
