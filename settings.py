@@ -13,6 +13,9 @@ class Config:
     JWT_COOKIE_SECURE = True
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     UPLOADED_PHOTOS_DEST = os.path.join(str(BASE_DIR / 'static/img'))
+    UPLOADED_THUMBNAIL_DEST = os.path.join(str(BASE_DIR / 'static/thumbnail'))
+    if not os.path.isdir(UPLOADED_THUMBNAIL_DEST):
+        os.mkdir(UPLOADED_THUMBNAIL_DEST)
 
     @staticmethod
     def init_app(app):

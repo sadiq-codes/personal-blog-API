@@ -4,11 +4,11 @@ from flask import request, jsonify, make_response, url_for, current_app, \
     send_from_directory
 from flask_jwt_extended import current_user, jwt_required, get_csrf_token
 from apps import db, photos
-from sqlalchemy import update, func
+from PIL import Image
 from .forms import PostForm, TagForm, CategoryForm
 from .models import Post, Tag, Category
 from ..errors import bad_request, forbidden, method_not_allowed, not_found
-from ..helpers import get_or_create
+from ..helpers import get_or_create, destination_save, destination_open
 from werkzeug.utils import secure_filename
 
 
@@ -83,7 +83,7 @@ def get_post_by_category(category_slug):
 
 @api.route('/uploads/<filename>', methods=['GET'])
 def get_file(filename):
-    return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))
+    return send_from_directory(current_app.config["UPLOADED_THUMBNAIL_DEST"], secure_filename(filename))
 
 
 @api.route('/post/create', methods=['POST'])
@@ -93,14 +93,20 @@ def create_post():
     if form.is_submitted() and 'photo' in request.files:
         category = get_or_create(db, Category, name=request.form["category"].lower())
         post = Post(title=form.title.data, body=form.body.data, author=current_user, category=category)
-        image = photos.save(request.files['photo'])
-        post.image = image
+
+        photo = photos.save(request.files['photo'])
+        image = Image.open(destination_open(photo))
+        image.thumbnail((2400, 1600))
+        image.save(destination_save(photo))
+
+        post.image = photo
         tags_data = form.tags.data.split(',')
         if tags_data:
             for tag in tags_data:
                 new_tag = get_or_create(db, Tag, name=tag)
                 new_tag.posts.append(post)
         db.session.add(post)
+        print("post is added")
         db.session.commit()
         return jsonify(post.format_to_json()), 200
     return jsonify({"msg": "owokijwo"})
@@ -110,7 +116,6 @@ def create_post():
 @jwt_required(optional=True)
 def update_post(post_slug):
     form = PostForm(request.form)
-    print(request.files)
     post = Post.query.filter_by(slug=post_slug).first()
     if not post:
         return not_found(message=f"post with slug {post_slug} does not exist")
@@ -120,8 +125,11 @@ def update_post(post_slug):
     else:
         category = get_or_create(db, Category, name=request.form["category"].lower())
         if request.files:
-            image = photos.save(request.files['photo'])
-            post.image = image
+            photo = photos.save(request.files['photo'])
+            image = Image.open(destination_open(photo))
+            image.thumbnail((2400, 1600))
+            image.save(destination_save(photo))
+            post.image = photo
         post.category = category
         post.title = form.title.data
         post.body = form.body.data
