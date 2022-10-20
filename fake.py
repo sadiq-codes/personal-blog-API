@@ -40,13 +40,15 @@ def posts(count=100):
     fake = Faker()
     user = User.query.filter_by(email="bbkrmuhdsaddiq@gmail.com").first()
     tag_count = Tag.query.all()
+    category = Category.query.filter_by(name="tech").first()
     for i in range(count):
         tag = fake.random_sample(elements=tag_count, length=3)
         p = Post(body=fake.text(),
                  title=fake.sentence(),
                  publish_on=fake.past_date(),
                  author=user,
-                 tags=tag)
+                 tags=tag,
+                 category=category)
         db.session.add(p)
     db.session.commit()
 
@@ -79,7 +81,7 @@ def comments(count=100):
 #     db.session.commit()
 
 def add_categories():
-    c = Category(name="Tech", description="tech related posts")
+    c = Category(name="tech", description="tech related posts")
     db.session.add(c)
     post = Post.query.all()
     category = Category.query.filter_by(name="Tech").first()

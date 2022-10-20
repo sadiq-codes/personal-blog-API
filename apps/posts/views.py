@@ -106,7 +106,6 @@ def create_post():
                 new_tag = get_or_create(db, Tag, name=tag)
                 new_tag.posts.append(post)
         db.session.add(post)
-        print("post is added")
         db.session.commit()
         return jsonify(post.format_to_json()), 200
     return jsonify({"msg": "owokijwo"})
@@ -157,7 +156,6 @@ def delete_post(post_slug):
         forbidden(message="Permission denied")
     db.session.delete(post)
     db.session.commit()
-    # return jsonify(), 200
     return jsonify({"message": "post deleted successfully"}), 200
 
 
