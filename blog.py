@@ -8,7 +8,7 @@ from apps import comments
 from routes import api
 import fake
 
-app = create_app(os.getenv('FLASK_CONFIG') or 'development')
+app = create_app(os.getenv('FLASK_CONFIG'))
 migrate = Migrate(app, db)
 app.register_blueprint(api, url_prefix="/api/v1/")
 User = users.models.User

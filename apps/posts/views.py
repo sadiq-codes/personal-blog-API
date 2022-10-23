@@ -6,10 +6,11 @@ from flask_jwt_extended import current_user, jwt_required, get_csrf_token
 from apps import db, photos
 from PIL import Image
 from .forms import PostForm, TagForm, CategoryForm
-from .models import Post, Tag, Category
+from .models import Post, Tag, Category, tag
 from ..errors import bad_request, forbidden, method_not_allowed, not_found
 from ..helpers import get_or_create, destination_save, destination_open
 from werkzeug.utils import secure_filename
+from sqlalchemy.sql import func
 
 
 @api.route('/create/category', methods=['POST'])
@@ -108,7 +109,7 @@ def create_post():
         db.session.add(post)
         db.session.commit()
         return jsonify(post.format_to_json()), 200
-    return jsonify({"msg": "owokijwo"})
+    return jsonify({"msg": "add post data to create"})
 
 
 @api.route('/post/update/<post_slug>', methods=['PUT'])
@@ -183,10 +184,21 @@ def post_list():
 @api.route('/post/detail/<post_slug>', methods=['GET'])
 @jwt_required(optional=True)
 def post_detail(post_slug):
+    print(post_slug)
     post = Post.query.filter_by(slug=post_slug).first()
     if not post:
         return not_found(message=f"post with slug {post_slug} does not exist")
-    return jsonify({"post": post.format_to_json()})
+
+    tags_ids = db.session.query(tag.c.tags_id).filter(tag.c.posts_id == post.id)
+    posts = db.session.query(Post) \
+        .filter(Post.id != post.id) \
+        .filter(tag.c.tags_id.in_(tags_ids)) \
+        .filter(tag.c.posts_id == Post.id) \
+        .group_by(Post) \
+        .order_by(func.count(tag.c.tags_id).desc()).all()[:3]
+
+    return jsonify({"post": post.format_to_json(),
+                    "related": [p.format_to_json() for p in posts]})
 
 
 @api.route('/create/tag', methods=['POST'])

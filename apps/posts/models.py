@@ -1,7 +1,7 @@
 from sqlalchemy.orm import relationship
 
 from apps import db
-# from blog import app
+import random
 from datetime import datetime
 from flask import url_for, current_app
 from sqlalchemy import event
