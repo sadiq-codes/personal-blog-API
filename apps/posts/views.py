@@ -8,7 +8,7 @@ from PIL import Image
 from .forms import PostForm, TagForm, CategoryForm
 from .models import Post, Tag, Category, tag
 from ..errors import bad_request, forbidden, method_not_allowed, not_found
-from ..helpers import get_or_create, destination_save, destination_open, add_to_digitalocean
+from ..helpers import get_or_create, destination_save, destination_open, add_to_digitalocean, show_image
 from werkzeug.utils import secure_filename
 from sqlalchemy.sql import func
 
@@ -82,6 +82,7 @@ def get_post_by_category(category_slug):
     })
 
 
+# route to get image from local directory
 @api.route('/uploads/<filename>', methods=['GET'])
 def get_file(filename):
     return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))
@@ -176,7 +177,7 @@ def delete_post(post_slug):
 def post_list():
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.publish_on.desc()) \
-        .paginate(page, per_page=16,
+        .paginate(page, per_page=50,
                   error_out=False)
 
     prev_post = url_for('api.post_list', page=posts.prev_num) \
@@ -196,7 +197,6 @@ def post_list():
 @api.route('/post/detail/<post_slug>', methods=['GET'])
 @jwt_required(optional=True)
 def post_detail(post_slug):
-    print(post_slug)
     post = Post.query.filter_by(slug=post_slug).first()
     if not post:
         return not_found(message=f"post with slug {post_slug} does not exist")
