@@ -177,7 +177,7 @@ def delete_post(post_slug):
 def post_list():
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.publish_on.desc()) \
-        .paginate(page, per_page=50,
+        .paginate(page, per_page=12,
                   error_out=False)
 
     prev_post = url_for('api.post_list', page=posts.prev_num) \
