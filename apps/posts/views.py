@@ -8,7 +8,7 @@ from PIL import Image
 from .forms import PostForm, TagForm, CategoryForm
 from .models import Post, Tag, Category, tag
 from ..errors import bad_request, forbidden, method_not_allowed, not_found
-from ..helpers import get_or_create, destination_save, destination_open
+from ..helpers import get_or_create, destination_save, destination_open, add_to_digitalocean
 from werkzeug.utils import secure_filename
 from sqlalchemy.sql import func
 
@@ -84,7 +84,7 @@ def get_post_by_category(category_slug):
 
 @api.route('/uploads/<filename>', methods=['GET'])
 def get_file(filename):
-    return send_from_directory(current_app.config["UPLOADED_THUMBNAIL_DEST"], secure_filename(filename))
+    return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))
 
 
 @api.route('/post/create', methods=['POST'])
@@ -95,12 +95,18 @@ def create_post():
         category = get_or_create(db, Category, name=request.form["category"].lower())
         post = Post(title=form.title.data, body=form.body.data, author=current_user, category=category)
 
-        photo = photos.save(request.files['photo'])
-        image = Image.open(destination_open(photo))
-        image.thumbnail((2400, 1600))
-        image.save(destination_save(photo))
+        file = request.files['photo']
+        if request.files and file.filename != "":
+            # for local host
+            # photo = photos.save(request.files['photo'])
+            # image = Image.open(destination_open(photo))
+            # image.thumbnail((2400, 1600))
+            # image.save(destination_save(photo))
+            # post.image = photo
 
-        post.image = photo
+            # for digital ocean spaces
+            add_to_digitalocean(file)
+
         tags_data = form.tags.data.split(',')
         if tags_data:
             for tag in tags_data:
@@ -124,12 +130,18 @@ def update_post(post_slug):
         forbidden(message="Permission denied")
     else:
         category = get_or_create(db, Category, name=request.form["category"].lower())
-        if request.files:
-            photo = photos.save(request.files['photo'])
-            image = Image.open(destination_open(photo))
-            image.thumbnail((2400, 1600))
-            image.save(destination_save(photo))
-            post.image = photo
+        file = request.files['photo']
+        if request.files and file.filename != "":
+            # for local host
+            # photo = photos.save(request.files['photo'])
+            # image = Image.open(destination_open(photo))
+            # image.thumbnail((2400, 1600))
+            # image.save(destination_open(photo))
+            # post.image = photo
+
+            # for digital ocean spaces
+            add_to_digitalocean(file)
+            post.image = file.filename
         post.category = category
         post.title = form.title.data
         post.body = form.body.data
@@ -191,11 +203,11 @@ def post_detail(post_slug):
 
     tags_ids = db.session.query(tag.c.tags_id).filter(tag.c.posts_id == post.id)
     posts = db.session.query(Post) \
-        .filter(Post.id != post.id) \
-        .filter(tag.c.tags_id.in_(tags_ids)) \
-        .filter(tag.c.posts_id == Post.id) \
-        .group_by(Post) \
-        .order_by(func.count(tag.c.tags_id).desc()).all()[:3]
+                .filter(Post.id != post.id) \
+                .filter(tag.c.tags_id.in_(tags_ids)) \
+                .filter(tag.c.posts_id == Post.id) \
+                .group_by(Post) \
+                .order_by(func.count(tag.c.tags_id).desc()).all()[:3]
 
     return jsonify({"post": post.format_to_json(),
                     "related": [p.format_to_json() for p in posts]})

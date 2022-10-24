@@ -14,6 +14,8 @@ class Config:
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     UPLOADED_PHOTOS_DEST = os.path.join(str(BASE_DIR / 'static/img'))
     UPLOADED_THUMBNAIL_DEST = os.path.join(str(BASE_DIR / 'static/thumbnail'))
+    SPACE_NAME = os.environ.get("SPACE_NAME")
+
 
     @staticmethod
     def init_app(app):

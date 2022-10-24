@@ -1,5 +1,10 @@
 import os
-from flask import current_app
+from io import BytesIO
+from flask import current_app, send_from_directory
+from werkzeug.utils import secure_filename
+from PIL import Image
+
+from spaces import client
 
 
 def get_or_create(database: object, model: object, **kwargs: object) -> object:
@@ -20,7 +25,14 @@ def destination_save(photo):
     return '/'.join([current_app.config["UPLOADED_THUMBNAIL_DEST"], photo])
 
 
-def check_if_image_exist():
-    pass
-
-
+def add_to_digitalocean(file):
+    filename = secure_filename(file.filename)
+    image = Image.open(BytesIO(file.read()))
+    image.thumbnail((2400, 1600))
+    image_file = BytesIO()
+    image.save(image_file, format=image.format)
+    image_file.seek(0)
+    client.put_object(Body=image_file,
+                      Bucket=current_app.config["SPACE_NAME"],
+                      Key=filename,
+                      ContentType=file.content_type)
