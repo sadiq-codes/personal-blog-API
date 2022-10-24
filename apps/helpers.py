@@ -19,12 +19,11 @@ def get_or_create(database: object, model: object, **kwargs: object) -> object:
         return create_instance
 
 
-def destination_open(photo):
+def destination_open_or_save(photo):
     return '/'.join([current_app.config["UPLOADED_PHOTOS_DEST"], photo])
 
 
-def destination_save(photo):
-    return '/'.join([current_app.config["UPLOADED_THUMBNAIL_DEST"], photo])
+
 
 
 def add_to_digitalocean(file):

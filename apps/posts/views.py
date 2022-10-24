@@ -8,7 +8,7 @@ from PIL import Image
 from .forms import PostForm, TagForm, CategoryForm
 from .models import Post, Tag, Category, tag
 from ..errors import bad_request, forbidden, method_not_allowed, not_found
-from ..helpers import get_or_create, destination_save, destination_open, add_to_digitalocean, show_image
+from ..helpers import get_or_create,  add_to_digitalocean, destination_open_or_save
 from werkzeug.utils import secure_filename
 from sqlalchemy.sql import func
 
