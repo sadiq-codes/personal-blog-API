@@ -83,9 +83,9 @@ def get_post_by_category(category_slug):
 
 
 # route to get image from local directory
-@api.route('/uploads/<filename>', methods=['GET'])
-def get_file(filename):
-    return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))
+# @api.route('/uploads/<filename>', methods=['GET'])
+# def get_file(filename):
+#     return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))
 
 
 @api.route('/post/create', methods=['POST'])
