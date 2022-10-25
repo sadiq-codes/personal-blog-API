@@ -23,9 +23,6 @@ def destination_open_or_save(photo):
     return '/'.join([current_app.config["UPLOADED_PHOTOS_DEST"], photo])
 
 
-
-
-
 def add_to_digitalocean(file):
     filename = secure_filename(file.filename)
     image = Image.open(BytesIO(file.read()))

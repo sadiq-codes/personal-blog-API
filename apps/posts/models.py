@@ -116,7 +116,7 @@ class Post(db.Model):
             'body_html': self.body_html,
             'category': self.category.format_to_json(add_post=False) if self.category is not None else "",
             # 'image': url_for('api.get_file', filename=self.image) if self.image is not None else "",
-            'image': show_image(self.image) if self.image is not None else "",
+            'image': self.image if self.image is not None else "",
             'created_on': self.publish_on,
             'update_on': self.updated_on,
             'author_url': url_for('api.profile', user_id=self.author_id),
@@ -143,4 +143,9 @@ def on_changed_body(target, value, oldvalue, initiator):
     target.body_html = bleach.linkify(bleach.clean(
         markdown(value, output_format='html'),
         tags=allowed_tags, strip=True))
+
+
+# @event.listens_for(Post.image, 'set')
+# def post_slugify(target, value, oldvalue, initiator):
+#     target.image_url = show_image(value)
 
