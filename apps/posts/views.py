@@ -8,7 +8,7 @@ from PIL import Image
 from .forms import PostForm, TagForm, CategoryForm
 from .models import Post, Tag, Category, tag
 from ..errors import bad_request, forbidden, method_not_allowed, not_found
-from ..helpers import get_or_create,  add_to_digitalocean, destination_open_or_save
+from ..helpers import get_or_create, add_to_digitalocean, destination_open_or_save
 from werkzeug.utils import secure_filename
 from sqlalchemy.sql import func
 
@@ -96,8 +96,7 @@ def create_post():
         category = get_or_create(db, Category, name=request.form["category"].lower())
         post = Post(title=form.title.data, body=form.body.data, author=current_user, category=category)
 
-        file = request.files['photo']
-        if request.files and file.filename != "":
+        if request.files:
             # for local host
             # photo = photos.save(request.files['photo'])
             # image = Image.open(destination_open(photo))
@@ -106,7 +105,10 @@ def create_post():
             # post.image = photo
 
             # for digital ocean spaces
-            add_to_digitalocean(file)
+            file = request.files['photo']
+            if file.filename != "":
+                add_to_digitalocean(file)
+            post.image = file.filename
 
         tags_data = form.tags.data.split(',')
         if tags_data:
@@ -131,17 +133,19 @@ def update_post(post_slug):
         forbidden(message="Permission denied")
     else:
         category = get_or_create(db, Category, name=request.form["category"].lower())
-        file = request.files['photo']
-        if request.files and file.filename != "":
+
+        if request.files:
             # for local host
             # photo = photos.save(request.files['photo'])
             # image = Image.open(destination_open(photo))
             # image.thumbnail((2400, 1600))
-            # image.save(destination_open(photo))
+            # image.save(destination_save(photo))
             # post.image = photo
 
             # for digital ocean spaces
-            add_to_digitalocean(file)
+            file = request.files['photo']
+            if file.filename != "":
+                add_to_digitalocean(file)
             post.image = file.filename
         post.category = category
         post.title = form.title.data
