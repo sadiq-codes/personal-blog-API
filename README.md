@@ -12,7 +12,7 @@ This is back-end api of my personal blog application build with python and flask
 - CRUD for posts, comments, tags, likes, and categories.
 
 
-## Getting Stated 
+## Installation 
 
 ``` bash 
 git clone https://github.com/bbkrmuhd/personal-blog-API.git
@@ -27,7 +27,7 @@ python3 -m pip install -r requirements.txt
 
 ```
 
-# Usage
+## Usage
 
 This project requires environmental variables for runtime configuration.
 
