@@ -17,6 +17,11 @@ Tag = posts.models.Tag
 Comment = comments.models.Comment
 
 
+@app.route("/", methods=["GET"])
+def home():
+    return "Hello welcome to my blog api"
+
+
 @app.shell_context_processor
 def create_shell_context():
     return {"db": db, "User": User, "fake": fake,
