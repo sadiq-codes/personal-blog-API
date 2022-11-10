@@ -16,6 +16,8 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag ams2000/personal-blog:v1
+    - name: logout of docker
+      run: docker logout
     - name: Login to dockerhub
       run: docker login
     - name: Push docker image to dockerhub
