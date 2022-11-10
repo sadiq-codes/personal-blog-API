@@ -19,7 +19,7 @@ jobs:
     - name: logout of docker
       run: docker logout
     - name: Login to dockerhub
-      run: docker login
+      run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
     - name: Push docker image to dockerhub
       run: docker push ams2000/personal-blog:v1
  
