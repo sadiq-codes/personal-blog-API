@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  
+  workflow_dispatch:
+  
+
+env:
+  REGISTRY: "ams2000"
+  IMAGE_NAME: "personal-blog"
+  
+jobs:
+  build_and_push:
+    runs_on: ubuntu_latest
+    
+    steps:
+    - name: Checkout files
+      uses: actions/checkout@v2
+      
+    - name: Build container image latest
+      run: docker build -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | latest) .
+    
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+          token: ${{ secrets.DIGITAL_OCEAN_ACCESS_TOKEN }}
+    
+    - name: login to dockerhub
+      run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD hub.docker.com
+      
+    - name: push docker container to dockerhub
+      run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | latest)
+      
+      
+deploy:
+  needs: buld_and_push
+  runs-on: ubuntu-latest
+  
+  steps:
+  - name: deploy to digital ocean droplet via ssh action
+    uses: appleboy/shh-action@v0.1.3
+    with:
+      host: ${{ secrets.HOST }}
+      username: ${{ secrets.USERNAME }}
+      password: ${{ secrets.PASSWORD }}    
+      envs: IMAGE_NAME,REGISTRY,GITHUB_SHA, ${{ secrets.DOCKER_USERNAME }}, ${{ secrets.DOCKER_PASSWORD }}
+      port: 22
+      script: |
+          # login docker
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD hub.docker.com
+
+          # Run a new container from a new image
+          docker run -d \
+            --restart always \
+            -p 80:5000 \
+            --name $(echo $IMAGE_NAME) \
+            $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
+
+
+  
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
