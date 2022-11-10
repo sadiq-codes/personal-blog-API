@@ -8,7 +8,7 @@ on:
   
 
 env:
-  REGISTRY: "ams2000"
+  REGISTRY: "registry.digitalocean.com/digital-containers"
   IMAGE_NAME: "personal-blog"
   
 jobs:
@@ -25,10 +25,10 @@ jobs:
     - name: Install doctl
       uses: digitalocean/action-doctl@v2
       with:
-          token: ${{ secrets.DIGITAL_OCEAN_ACCESS_TOKEN }}
+        token: ${{ secrets.DIGITAL_OCEAN_ACCESS_TOKEN }}
     
     - name: login to dockerhub
-      run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD hub.docker.com
+      run: doctl registry login
       
     - name: push docker container to dockerhub
       run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | latest)
@@ -49,7 +49,8 @@ jobs:
         port: 22
         script: |
             # login docker
-            docker login -u $DOCKER_USER -p $DOCKER_PASSWORD hub.docker.com
+            doctl registry login
+            # docker login -u $DOCKER_USER -p $DOCKER_PASSWORD registry.digitalocean.com
 
             # Run a new container from a new image
             docker run -d \
