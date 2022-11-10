@@ -19,7 +19,7 @@
 ## Specify the command to run on container start
 #CMD [ "python", "./blog.py" ]
 
-FROM python:3.10-slim
+FROM python:3.10-slim-bullseye
 
 EXPOSE 5000/tcp
 
@@ -31,7 +31,7 @@ ENV FLASK_CONFIG development
 
 WORKDIR /blog
 
-RUN python -m venv venv
+#RUN python -m venv venv
 
 # Copy the dependencies file to the working directory
 COPY requirements.txt .
@@ -40,10 +40,10 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy the content of the local src directory to the working directory
-COPY apps apps
-COPY migrations migrations
-COPY blog.py settings.py spaces.py fake.py routes.py ./
 
-CMD [ "python", "./blog.py" ]
+#COPY blog.py settings.py spaces.py fake.py routes.py ./
+COPY . .
+
 # runtime configuration
+CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
 
