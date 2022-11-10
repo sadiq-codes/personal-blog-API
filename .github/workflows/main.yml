@@ -17,7 +17,7 @@ jobs:
     
     steps:
     - name: Checkout files
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       
     - name: Build container image latest
       run: docker build -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | latest) .
@@ -26,18 +26,16 @@ jobs:
       uses: digitalocean/action-doctl@v2
       with:
         token: ${{ secrets.DIGITAL_OCEAN_ACCESS_TOKEN }}
-    
-    - name: login to dockerhub
-      run: doctl registry login
-      
-    - name: push docker container to dockerhub
+    - name: Log in to DigitalOcean Container Registry with short-lived credentials
+      run: doctl registry login --expiry-seconds 600
+
+    - name: Push image to DigitalOcean Container Registry
       run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | latest)
       
       
   deploy:
     needs: build_and_push
     runs-on: ubuntu-latest
-  
     steps:
     - name: deploy to digital ocean droplet via ssh action
       uses: appleboy/shh-action@v0.1.3
