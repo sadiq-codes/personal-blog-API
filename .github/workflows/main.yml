@@ -2,10 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
-  
-  workflow_dispatch:
-  
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 env:
   REGISTRY: "registry.digitalocean.com/digital-containers"
@@ -15,23 +14,24 @@ jobs:
   build_and_push:
     runs-on: ubuntu_latest
     
+    
     steps:
-    - name: Checkout files
-      uses: actions/checkout@v3
-      
+    - uses: actions/checkout@v3
+    
     - name: Build container image latest
       run: docker build -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | latest) .
-    
+      
     - name: Install doctl
       uses: digitalocean/action-doctl@v2
       with:
         token: ${{ secrets.DIGITAL_OCEAN_ACCESS_TOKEN }}
-    - name: Log in to DigitalOcean Container Registry with short-lived credentials
-      run: doctl registry login --expiry-seconds 600
-
+      
+    - name: Log in to DigitalOcean container registry 
+      run: doctl registry login
+      
     - name: Push image to DigitalOcean Container Registry
       run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | latest)
-      
+
       
   deploy:
     needs: build_and_push
