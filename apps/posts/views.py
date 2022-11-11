@@ -1,15 +1,12 @@
 from routes import api
 import random
-from flask import request, jsonify, make_response, url_for, current_app, \
-    send_from_directory
-from flask_jwt_extended import current_user, jwt_required, get_csrf_token
-from apps import db, photos
-from PIL import Image
+from flask import request, jsonify, make_response, url_for
+from flask_jwt_extended import current_user, jwt_required
+from apps import db
 from .forms import PostForm, TagForm, CategoryForm
 from .models import Post, Tag, Category, tag
-from ..errors import bad_request, forbidden, method_not_allowed, not_found
-from ..helpers import get_or_create, add_to_digitalocean, destination_open_or_save
-from werkzeug.utils import secure_filename
+from ..errors import forbidden, not_found
+from ..helpers import get_or_create, upload_file_to_s3
 from sqlalchemy.sql import func
 
 
@@ -82,11 +79,6 @@ def get_post_by_category(category_slug):
     })
 
 
-# route to get image from local directory
-# @api.route('/uploads/<filename>', methods=['GET'])
-# def get_file(filename):
-#     return send_from_directory(current_app.config["UPLOADED_PHOTOS_DEST"], secure_filename(filename))
-
 
 @api.route('/post/create', methods=['POST'])
 @jwt_required(optional=True)
@@ -97,18 +89,9 @@ def create_post():
         post = Post(title=form.title.data, body=form.body.data, author=current_user, category=category)
 
         if request.files:
-            # for local host
-            # photo = photos.save(request.files['photo'])
-            # image = Image.open(destination_open(photo))
-            # image.thumbnail((2400, 1600))
-            # image.save(destination_save(photo))
-            # post.image = photo
-
-            # for digital ocean spaces
             file = request.files['photo']
             if file.filename != "":
-                add_to_digitalocean(file)
-            post.image = file.filename
+                post.image = upload_file_to_s3(file)
 
         tags_data = form.tags.data.split(',')
         if tags_data:
@@ -135,18 +118,10 @@ def update_post(post_slug):
         category = get_or_create(db, Category, name=request.form["category"].lower())
 
         if request.files:
-            # for local host
-            # photo = photos.save(request.files['photo'])
-            # image = Image.open(destination_open(photo))
-            # image.thumbnail((2400, 1600))
-            # image.save(destination_save(photo))
-            # post.image = photo
-
-            # for digital ocean spaces
             file = request.files['photo']
             if file.filename != "":
-                add_to_digitalocean(file)
-            post.image = file.filename
+                post.image = upload_file_to_s3(file)
+
         post.category = category
         post.title = form.title.data
         post.body = form.body.data
@@ -155,8 +130,6 @@ def update_post(post_slug):
         if tags_data:
             for tag in tags_data:
                 new_tag = get_or_create(db, Tag, name=tag.lower())
-                # if new_tag not in post.tags:
-                #     new_tag.posts.append(post)
                 tags_array.append(new_tag)
                 post.tags = tags_array
         db.session.add(post)

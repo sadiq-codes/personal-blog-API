@@ -1,12 +1,12 @@
 import os
 import logging
 from io import BytesIO
-from flask import current_app, send_from_directory
+from flask import current_app
 from werkzeug.utils import secure_filename
 from botocore.exceptions import ClientError
 from PIL import Image
 
-from spaces import client
+from s3bucket import s3
 
 
 def get_or_create(database: object, model: object, **kwargs: object) -> object:
@@ -23,24 +23,39 @@ def destination_open_or_save(photo):
     return '/'.join([current_app.config["UPLOADED_PHOTOS_DEST"], photo])
 
 
-def add_to_digitalocean(file):
+def upload_file_to_s3(file, acl="public-read"):
+    print("iam here")
     filename = secure_filename(file.filename)
     image = Image.open(BytesIO(file.read()))
     image.thumbnail((2400, 1600))
     image_file = BytesIO()
     image.save(image_file, format=image.format)
     image_file.seek(0)
-    client.put_object(Body=image_file,
-                      Bucket=current_app.config["SPACE_NAME"],
-                      Key=filename,
-                      ContentType=file.content_type)
+
+    try:
+
+        s3.upload_fileobj(
+            Body=image_file,
+            Bucket=current_app.config["SPACE_NAME"],
+            Key=filename,
+            ExtraArgs={
+                "ACL": acl,
+                "ContentType": file.content_type
+            }
+        )
+
+    except Exception as e:
+        print("Something Happened: ", e)
+        return e
+
+    return "{}{}".format(current_app.config["S3_LOCATION"], file.filename)
 
 
 def show_image(filename):
-    bucket = current_app.config["SPACE_NAME"]
+    bucket = current_app.config["S3_NAME"]
     try:
-        presigned_url = client.generate_presigned_url('get_object', Params={'Bucket': bucket,
-                                                                            'Key': filename}, ExpiresIn=3600)
+        presigned_url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket,
+                                                                        'Key': filename}, ExpiresIn=3600)
     except ClientError as e:
         logging.error(e)
         return None
