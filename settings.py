@@ -13,7 +13,8 @@ class Config:
     JWT_COOKIE_SECURE = True
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     UPLOADED_PHOTOS_DEST = os.path.join(str(BASE_DIR / 'static/img'))
-    SPACE_NAME = os.environ.get("SPACE_NAME")
+    S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME")
+    S3_LOCATION = os.environ.get("S3_LOCATION")
 
 
     @staticmethod

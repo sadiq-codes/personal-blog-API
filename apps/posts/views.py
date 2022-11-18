@@ -84,7 +84,7 @@ def get_post_by_category(category_slug):
 @jwt_required(optional=True)
 def create_post():
     form = PostForm(request.form)
-    if form.is_submitted() and 'photo' in request.files:
+    if form.is_submitted():
         category = get_or_create(db, Category, name=request.form["category"].lower())
         post = Post(title=form.title.data, body=form.body.data, author=current_user, category=category)
 
