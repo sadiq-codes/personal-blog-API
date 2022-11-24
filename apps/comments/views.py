@@ -107,8 +107,9 @@ def get_comments_likes(post_slug):
     # if Like.query.filter_by(post_id=post.id).count() > 0:
         # has_like = True
 
-    return jsonify({"post": {"likes": post.likes.count(),
-                             "comments": post.comments.count()}})
+    return jsonify({"post": {"id": post.id,
+                             "likes": post.likes.count(),
+                             "comments": post.comments.count(),}})
 
 
 @api.route('/post/like/<post_slug>', methods=['PUT'])
@@ -121,7 +122,8 @@ def like_post(post_slug):
     db.session.add(like)
     db.session.commit()
     return jsonify({"message": "You like this post",
-                    "post": {"likes": post.likes.count(),
+                    "post": {"id": post.id,
+                             "likes": post.likes.count(),
                              "comments": post.comments.count()}})
     # else:
     #     return bad_request(message="You already like this post")
@@ -135,7 +137,8 @@ def unlike_post(post_slug):
         db.session.delete(like)
         db.session.commit()
         return jsonify({"message": "You have unlike this post",
-                        "post": {"likes": post.likes.count(),
+                        "post": {"id": post.id,
+                                 "likes": post.likes.count(),
                                  "comments": post.comments.count()}})
     else:
         return not_found(message="You did not like this post")
