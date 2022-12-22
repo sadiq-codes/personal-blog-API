@@ -15,6 +15,8 @@ class Config:
     UPLOADED_PHOTOS_DEST = os.path.join(str(BASE_DIR / 'static/img'))
     S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME")
     S3_LOCATION = os.environ.get("S3_LOCATION")
+    CELERY_BROKER_URL = 'redis://localhost:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 
     @staticmethod

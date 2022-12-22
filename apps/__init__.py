@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_uploads import IMAGES, UploadSet, configure_uploads
 from . import errors
+from celery import Celery
 
 from flask_cors import CORS
 
@@ -28,6 +29,9 @@ def create_app(config_name):
     db.init_app(app)
     migrate.init_app(app, db)
     # login_manager.init_app(app)
+    celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+
     jwt.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
     configure_uploads(app, photos)
