@@ -79,7 +79,6 @@ def get_post_by_category(category_slug):
     })
 
 
-
 @api.route('/post/create', methods=['POST'])
 @jwt_required(optional=True)
 def create_post():
