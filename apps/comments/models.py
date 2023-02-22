@@ -26,6 +26,7 @@ class Comment(db.Model):
             'created_on': self.created_on,
             # 'user_url': url_for('api.profile', id=self.author_id) if self.author_id else "",
             'reply_comment_id': self.reply_comment_id,
+            'post_slug': self.post.slug,
         }
         return comment
 

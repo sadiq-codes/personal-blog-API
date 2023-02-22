@@ -269,7 +269,8 @@ def get_post_by_tags(tag_slug):
 @api.route('/posts/featured', methods=['GET'])
 def featured():
     posts = Post.query.order_by(Post.updated_on.desc()).all()
-    post = random.choice(posts)
+    # post = random.choice(posts)
+    post = posts[-1]
     return jsonify(post.format_to_json())
 
 
