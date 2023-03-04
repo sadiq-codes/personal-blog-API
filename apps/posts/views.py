@@ -248,9 +248,12 @@ def delete_post_tag(post_slug, tag_slug):
 def get_post_by_tags(tag_slug):
     page = request.args.get('page', 1, type=int)
     tag = Tag.query.filter_by(slug=tag_slug).first()
-    posts = tag.posts.order_by(Post.publish_on.desc()) \
-        .paginate(page, per_page=16,
-                  error_out=False)
+    try:
+        posts = tag.posts.order_by(Post.publish_on.desc()) \
+            .paginate(page, per_page=16,
+                      error_out=False)
+    except Exception:
+        return not_found(message=f"post with tag {tag_slug} does not exist")
 
     prev_post = url_for('api.post_list', page=posts.prev_num) \
         if posts.has_prev else None

@@ -22,6 +22,7 @@ def get_or_create(database: object, model: object, **kwargs: object) -> object:
 def destination_open_or_save(photo):
     return '/'.join([current_app.config["UPLOADED_PHOTOS_DEST"], photo])
 
+# def save_locally(photo):
 
 def upload_file_to_s3(file):
     filename = secure_filename(file.filename)
