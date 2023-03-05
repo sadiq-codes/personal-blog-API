@@ -1,3 +1,4 @@
+import sendgrid
 from routes import api
 from flask import make_response, abort, request, jsonify, url_for
 from .. import db
@@ -68,7 +69,7 @@ def get_comments(post_slug):
 
     comments = Comment.query.filter_by(post_id=post_id) \
         .order_by(desc(Comment.created_on)) \
-        .paginate(page, per_page=35)
+        .paginate(page, per_page=6)
     comments_items = comments.items
 
     prev_comments = None

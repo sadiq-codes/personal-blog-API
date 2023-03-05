@@ -6,7 +6,7 @@ from apps import db
 from .forms import PostForm, TagForm, CategoryForm
 from .models import Post, Tag, Category, tag
 from ..errors import forbidden, not_found
-from ..helpers import get_or_create, upload_file_to_s3
+from ..helpers import get_or_create, upload_file_to_s3, get_unsplash_photo
 from sqlalchemy.sql import func
 
 
@@ -87,10 +87,11 @@ def create_post():
         category = get_or_create(db, Category, name=request.form["category"].lower())
         post = Post(title=form.title.data, body=form.body.data, author=current_user, category=category)
 
-        if request.files:
-            file = request.files['photo']
-            if file.filename != "":
-                post.image = upload_file_to_s3(file)
+        # if request.files:
+        #     file = request.files['photo']
+        #     if file.filename != "":
+        #         post.image = upload_file_to_s3(file)
+        post.image = get_unsplash_photo()
 
         tags_data = form.tags.data.split(',')
         if tags_data:
@@ -116,10 +117,11 @@ def update_post(post_slug):
     else:
         category = get_or_create(db, Category, name=request.form["category"].lower())
 
-        if request.files:
-            file = request.files['photo']
-            if file.filename != "":
-                post.image = upload_file_to_s3(file)
+        # if request.files:
+        #     file = request.files['photo']
+        #     if file.filename != "":
+        #         post.image = upload_file_to_s3(file)
+        post.image = get_unsplash_photo()
 
         post.category = category
         post.title = form.title.data

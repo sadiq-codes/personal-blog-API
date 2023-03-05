@@ -1,4 +1,7 @@
 import os
+import requests
+import sendgrid
+from sendgrid.helpers.mail import *
 import logging
 from io import BytesIO
 from flask import current_app
@@ -22,7 +25,6 @@ def get_or_create(database: object, model: object, **kwargs: object) -> object:
 def destination_open_or_save(photo):
     return '/'.join([current_app.config["UPLOADED_PHOTOS_DEST"], photo])
 
-# def save_locally(photo):
 
 def upload_file_to_s3(file):
     filename = secure_filename(file.filename)
@@ -55,3 +57,25 @@ def show_image(filename):
         return None
 
     return presigned_url
+
+
+def get_unsplash_photo():
+    headers = {"Authorization": f"Client-ID {current_app.config['UNSPLASH_API_KEY']}"}
+    try:
+        response = requests.get(current_app.config['UNSPLASH_API_URL'], headers=headers)
+        unsplash_data = response.json()
+    except Exception:
+        return None
+    image_url = unsplash_data['urls']['small']
+    return image_url
+
+
+def create_comment(sender, receiver, subject, content):
+    sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY'))
+    from_email = Email(sender)
+    to_email = To(receiver)
+    subject = f"Sending with SendGrid is Fun {subject}"
+    content = Content("text/plain", f"and easy to do anywhere, even with Python {content}")
+    mail = Mail(from_email, to_email, subject, content)
+    response = sg.client.mail.send.post(request_body=mail.get())
+    return response

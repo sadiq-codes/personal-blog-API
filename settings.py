@@ -17,6 +17,9 @@ class Config:
     S3_LOCATION = os.environ.get("S3_LOCATION")
     CELERY_BROKER_URL = 'redis://localhost:6379/0'
     CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+    UNSPLASH_API_KEY = os.environ.get("UNSPLASH_ACCESS_KEY")
+    UNSPLASH_API_URL = "https://api.unsplash.com/photos/random?query=technology"
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 
 
     @staticmethod

@@ -10,7 +10,6 @@ import bleach
 from ..helpers import show_image
 
 
-
 class Category(db.Model):
     __tablename__ = "categories"
 
@@ -144,8 +143,6 @@ def on_changed_body(target, value, oldvalue, initiator):
         markdown(value, output_format='html'),
         tags=allowed_tags, strip=True))
 
-
 # @event.listens_for(Post.image, 'set')
 # def post_slugify(target, value, oldvalue, initiator):
 #     target.image_url = show_image(value)
-
