@@ -1,6 +1,6 @@
 FROM python:3.10-slim-bullseye
 
-EXPOSE 5000/tcp
+EXPOSE 80/tcp
 
 WORKDIR /blog
 
