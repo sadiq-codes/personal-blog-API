@@ -19,9 +19,9 @@ git clone https://github.com/bbkrmuhd/personal-blog-API.git
 
 cd personal-blog-API
 
-python3 -m venv env
+python3 -m venv venv
 
-source env/bin/activate
+source venv/bin/activate
 
 python3 -m pip install -r requirements.txt
 

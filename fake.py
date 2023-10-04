@@ -1,4 +1,4 @@
-from random import randint
+x4from random import randint
 from sqlalchemy.exc import IntegrityError
 from faker import Faker
 from apps import db
@@ -48,14 +48,9 @@ def comments(count=100):
     db.session.commit()
 
 
-def add_categories():
+def add_category():
     c = Category(name="tech", description="tech related posts")
     db.session.add(c)
-    post = Post.query.all()
-    category = Category.query.filter_by(name="Tech").first()
-    for p in post:
-        p.category = category
-
     db.session.commit()
 
 
