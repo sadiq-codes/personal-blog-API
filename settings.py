@@ -1,7 +1,12 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+from datetime import timedelta, datetime
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).parent
+
 
 
 class Config:

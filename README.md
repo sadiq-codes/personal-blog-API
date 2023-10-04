@@ -32,7 +32,7 @@ python3 -m pip install -r requirements.txt
 This project requires environmental variables for runtime configuration.
 
 ```bash
-export FLASK_APP=blog.py
+export FLASK_APP=app.py
 
 # If debug equals to true
 

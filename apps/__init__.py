@@ -28,7 +28,6 @@ def create_app(config_name):
     # register libraries
     db.init_app(app)
     migrate.init_app(app, db)
-    # login_manager.init_app(app)
     celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
     celery.conf.update(app.config)
 
@@ -40,5 +39,4 @@ def create_app(config_name):
     # # register blueprints
     # from .users import models, views
     # from .posts import models, views
-
     return app
