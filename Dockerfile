@@ -25,7 +25,7 @@ COPY . .
 #USER app
 
 ENV FLASK_CONFIG=development
-ENV FLASK_APP=myapp.py
-# Here, we're using the Flask development server to run our application.
+ENV FLASK_APP=app.py
+
 # For production, consider using a production-ready server like Gunicorn.
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
